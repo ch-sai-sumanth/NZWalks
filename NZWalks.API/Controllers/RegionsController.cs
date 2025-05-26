@@ -3,26 +3,27 @@ using Microsoft.EntityFrameworkCore;
 using NZWalks.API.Data;
 using NZWalks.API.Models.Domain;
 using NZWalks.API.Models.DTO;
+using NZWalks.API.Repository;
 
 namespace NZWalks.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class RegionsController : Controller
+public class RegionsController : ControllerBase
 {
-    private readonly NZWalksDbContext dbContext;
+    private readonly IRegionRepository regionRepository;
 
-    public RegionsController(NZWalksDbContext dbContext)
+    public RegionsController(IRegionRepository regionRepository)
     {
-        this.dbContext = dbContext;
+        this.regionRepository = regionRepository;
     }
     
     
     [HttpGet]
-    public async Task<IActionResult> GetAllRegions()
+    public async Task<IActionResult> GetAllRegionsAsync()
     {
-       
-        var regions=await dbContext.Regions.ToListAsync();
+
+        var regions = await regionRepository.GetAllAsync();
         
         var regionsDto= new List<RegionDto>();
 
@@ -47,8 +48,8 @@ public class RegionsController : Controller
     {
 
         // var region = dbContext.Regions.Find(id);
-        
-        var region=await dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
+
+        var region = await regionRepository.GetByIdAsync(id);
         if(region==null)
             return NotFound();
 
@@ -64,7 +65,7 @@ public class RegionsController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateRegion([FromBody] AddRegionRequestDto addRegionRequest)
+    public async Task<IActionResult> AddRegionAsync([FromBody] AddRegionRequestDto addRegionRequest)
     {
 
         var regionDomainModel = new Region()
@@ -73,8 +74,7 @@ public class RegionsController : Controller
             Name = addRegionRequest.Name,
             RegionImageUrl = addRegionRequest.RegionImageUrl,
         };
-        await dbContext.Regions.AddAsync(regionDomainModel);
-        await dbContext.SaveChangesAsync();
+        await regionRepository.AddAsync(regionDomainModel);
 
         var regionDto = new RegionDto()
         {
@@ -88,7 +88,7 @@ public class RegionsController : Controller
     
     [HttpPut]
     [Route("{id:Guid}")]
-    public async Task<IActionResult> CreateRegion([FromRoute] Guid id,[FromBody] UpdateRegionRequestDto updateRegionRequest)
+    public async Task<IActionResult> UpdateRegion([FromRoute] Guid id,[FromBody] UpdateRegionRequestDto updateRegionRequest)
     {
 
         var region = new Region()
@@ -98,30 +98,30 @@ public class RegionsController : Controller
             RegionImageUrl = updateRegionRequest.RegionImageUrl,
         };
         
-        await dbContext.Regions.AddAsync(region);
-        await dbContext.SaveChangesAsync();
+        region=await regionRepository.UpdateAsync(id,region);
+        
+        if(region==null)
+            return NotFound();
 
         var regionDto = new RegionDto()
         {
-            Id = region.Id,
             Code = region.Code,
             Name = region.Name,
             RegionImageUrl = region.RegionImageUrl,
         };
-        return CreatedAtAction(nameof(GetRegionById), new { id = regionDto.Id }, regionDto);
+        return Ok(regionDto);
     }
 
     [HttpDelete]
     [Route("{id:Guid}")]
     public async Task<IActionResult> DeleteRegion([FromRoute] Guid id)
     {
-        var regionDomainModel=await dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
+        var regionDomainModel = await regionRepository.GetByIdAsync(id);
         
         if(regionDomainModel==null)
             return NotFound();
         
-        dbContext.Regions.Remove(regionDomainModel);
-        await dbContext.SaveChangesAsync();
+        await regionRepository.DeleteAsync(id);
         var regionDto = new RegionDto()
         {
             Id = regionDomainModel.Id,
