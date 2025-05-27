@@ -28,12 +28,22 @@ public class SQLWalkRepository : IWalkRepository
             .FirstOrDefaultAsync(x=>x.Id == id);
     }
 
-    public async Task<List<Walk>> GetAllWalksAsync()
+    public async Task<List<Walk>> GetAllWalksAsync(string? filterOn = null , string? filterQuery=null)
     {
-        return await _dbContext.Walks
-            .Include(x=>x.Difficulty)
-            .Include(x=>x.Region)
-            .ToListAsync();
+        var walks=_dbContext.Walks
+            .Include(x => x.Difficulty)
+            .Include(x => x.Region)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+        {
+            if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = walks.Where(x=>x.Name.Contains(filterQuery));
+            }
+        }
+        
+        return await walks.ToListAsync();
     }
 
     public async Task<Walk?> UpdateWalkAsync(Guid id,Walk walk)
