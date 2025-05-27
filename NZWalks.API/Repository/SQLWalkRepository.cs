@@ -28,18 +28,32 @@ public class SQLWalkRepository : IWalkRepository
             .FirstOrDefaultAsync(x=>x.Id == id);
     }
 
-    public async Task<List<Walk>> GetAllWalksAsync(string? filterOn = null , string? filterQuery=null)
+    public async Task<List<Walk>> GetAllWalksAsync(string? filterOn = null , string? filterQuery=null, string? orderBy=null, bool isAscending=true)
     {
         var walks=_dbContext.Walks
             .Include(x => x.Difficulty)
             .Include(x => x.Region)
             .AsQueryable();
-
+        
+        //filtering
         if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
         {
             if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
             {
                 walks = walks.Where(x=>x.Name.Contains(filterQuery));
+            }
+        }
+        
+        //sorting
+        if (!string.IsNullOrWhiteSpace(orderBy))
+        {
+            if (orderBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = isAscending ? walks.OrderBy(x => x.Name) : walks.OrderByDescending(x => x.Name);
+            }
+            else if (orderBy.Equals("Length", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = isAscending ? walks.OrderBy(x=>x.LengthInKm) : walks.OrderByDescending(x=>x.LengthInKm);
             }
         }
         
