@@ -28,7 +28,8 @@ public class SQLWalkRepository : IWalkRepository
             .FirstOrDefaultAsync(x=>x.Id == id);
     }
 
-    public async Task<List<Walk>> GetAllWalksAsync(string? filterOn = null , string? filterQuery=null, string? orderBy=null, bool isAscending=true)
+    public async Task<List<Walk>> GetAllWalksAsync(string? filterOn = null , string? filterQuery=null, 
+        string? orderBy=null, bool isAscending=true, int  pageNumber=1,int pageSize=100)
     {
         var walks=_dbContext.Walks
             .Include(x => x.Difficulty)
@@ -57,7 +58,10 @@ public class SQLWalkRepository : IWalkRepository
             }
         }
         
-        return await walks.ToListAsync();
+        //pagination
+        var skipResults = (pageNumber - 1) * pageSize;
+        
+        return await walks.Skip(skipResults).Take(pageSize).ToListAsync();
     }
 
     public async Task<Walk?> UpdateWalkAsync(Guid id,Walk walk)
