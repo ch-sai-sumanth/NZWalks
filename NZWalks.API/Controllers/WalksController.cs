@@ -45,6 +45,8 @@ public class WalksController : ControllerBase
         [FromQuery] int pageNumber=1 , int pageSize=100)
     {
         var walksDomainModels = await _walkRepository.GetAllWalksAsync(filterOn,filterQuery,orderBy,isAscending,pageNumber,pageSize);
+        
+        // throw new Exception("this is  an error");
         return Ok(_mapper.Map<List<WalkDto>>(walksDomainModels));
     }
 
