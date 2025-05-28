@@ -9,6 +9,7 @@ using NZWalks.API.Data;
 using NZWalks.API.Mappings;
 using NZWalks.API.Models.Domain;
 using NZWalks.API.Repository;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/NZWalks_Lod.txt", rollingInterval: RollingInterval.Minute)
+    .MinimumLevel.Information()
+    .CreateLogger();
+
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<NZWalksDbContext>(options=>options.UseSqlServer(builder.Configuration.GetConnectionString("NZWalksConnectionString")));

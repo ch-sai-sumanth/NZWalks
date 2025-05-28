@@ -22,8 +22,8 @@ public class LocalImageRepository : IImageRepository
         var localFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Images", fileNameWithExtension);
         
         
-        using var steam = new FileStream(localFilePath, FileMode.Create);
-        await image.File.CopyToAsync(steam);
+        using var stream = new FileStream(localFilePath, FileMode.Create);
+        await image.File.CopyToAsync(stream);
 
         var urlFilePath = $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{_httpContextAccessor.HttpContext.Request.PathBase}/Images/{image.FileName}{image.FileExtension}";
         
